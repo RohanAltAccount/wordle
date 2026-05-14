@@ -33,14 +33,15 @@ int main(int, char **) {
     std::string userInput;
     std::cout << "Enter Text";
     std::getline(std::cin, userInput);
-std::transform(userInput.begin(), userInput.end()), userInput.begin, [](unsigned char c) { return std::toupper(c);
-                                                                                      });
-
+std::transform(userInput.begin(), userInput.end(), userInput.begin(), [](unsigned char c) { return std::toupper(c); });
     std::cout << userInput << std::endl;
     int numberOfTries = 6;
     std::vector<std::string> tries(numberOfTries);
 
     std::string target = getRandomWord();
+
+    
+bool won = false;
 
     
     return 0;
