@@ -5,69 +5,86 @@
 #include <cctype>
 #include <cstdlib>
 #include <ctime>
-// #include "crow.h"
-/* int main() {
-    crow::SimpleApp app;
-    CROW_ROUTE(app, "/")([](){
-        return "<h1>Hello from C++!</h1>";
-    });
-    app.port(18080).run();
-} */
-
+#include <emscripten.h>
 
 const int WORD_LENGTH = 5;
 const int NOT_RIGHT = 0;
 const int PARTIAL_RIGHT = 1;
 const int RIGHT = 2;
 
-std::string getRandomWord()
-{
-    std::vector<std::string> wordBank = {
-"ARRAY", "CLASS", "STACK", "QUEUE", "SCOPE", "FLOAT", "CONST", "UNION", "ALIAS", "BLOCK", "ASCII", "ERRNO", "QUERY", "IOCTL", "SCALA", "RUSTC", "SWIFT", "GOLAN", "PRINT", "INPUT", "SCANF", "ALLOC", "FREES", "OPENS", "CLOSE", "BYTES",
-    "CACHE", "HEAPQ", "MMAPD", "CHMOD", "CHOWN", "MOUNT", "UMASK", "HTTPD", "HTTPS", "FETCH", "DEBUG", 
-    "BUILD", "PATCH", "MERGE", "SPLIT", "TOKEN", "PARSE", "LEXER", "SYNCT", "JSONS",
-    "EXECS", "FORKS", "PIPES", "EVENT", "AWAIT", "ASYNC", "YIELD", "THROW", "CATCH", "FUNCT", "ESRCH", "ELIFS", "WHILE", "FINAL", "TYPES", "MACRO", "TEMPL", "NODES", "GRAPH", "EDGES", "INDEX", "VALUE", "PARAM", "FILES", "PATHS", "ROOTS", "LOOPS", "LOGIC", "CONDS", "FLAGS", "WORDS", "CLOCK", "TIMER", "DELAY", "WRITE", "READS", "SENDS", "RECVS", "PORTS", "HOSTS", "PROTO", "CODEC", "FRAME", "DEQUE", "LISTS", "TUPLE", "DICTS", "SETS", "BOOLS", "DOUBL", "CHARS", "STRNG", "REGEX", "RIGHT", "JOINS", "MAPFN", "FILTR", "REDUZ", "SORTS", "HEAPS", "TREES", "TRIES", "DFSFN", "BFSFN", "VISIT", "TRACE", "LOGFN", "PANIC", "CRASH", "ABORT", "RETRY", "SLEEP", "WAKER", "SCHED", "THRED", "MUTEX", "RAISE", "LOCKS", "RLOCK", "ULOCK", "SEMPH", "SPAWN", "JOINR", "TASKS", "FUTUR", "PROMS"
+std::string targetWord;
 
+std::string getRandomWord() {
+    std::vector<std::string> wordBank = {
+        "ARRAY", "CLASS", "STACK", "QUEUE", "SCOPE", "FLOAT", "CONST", "UNION", "ALIAS", 
+        "BLOCK", "ASCII", "ERRNO", "QUERY", "IOCTL", "SCALA", "RUSTC", "SWIFT", "GOLAN", 
+        "PRINT", "INPUT", "SCANF", "ALLOC", "FREES", "OPENS", "CLOSE", "BYTES", "CACHE", 
+        "HEAPQ", "MMAPD", "CHMOD", "CHOWN", "MOUNT", "UMASK", "HTTPD", "HTTPS", "FETCH", 
+        "DEBUG", "BUILD", "PATCH", "MERGE", "SPLIT", "TOKEN", "PARSE", "LEXER", "SYNCT", 
+        "JSONS", "EXECS", "FORKS", "PIPES", "EVENT", "AWAIT", "ASYNC", "YIELD", "THROW", 
+        "CATCH", "FUNCT", "ESRCH", "ELIFS", "WHILE", "FINAL", "TYPES", "MACRO", "TEMPL", 
+        "NODES", "GRAPH", "EDGES", "INDEX", "VALUE", "PARAM", "FILES", "PATHS", "ROOTS", 
+        "LOOPS", "LOGIC", "CONDS", "FLAGS", "WORDS", "CLOCK", "TIMER", "DELAY", "WRITE", 
+        "READS", "SENDS", "RECVS", "PORTS", "HOSTS", "PROTO", "CODEC", "FRAME", "DEQUE", 
+        "LISTS", "TUPLE", "DICTS", "SETS", "BOOLS", "DOUBL", "CHARS", "STRNG", "REGEX", 
+        "RIGHT", "JOINS", "MAPFN", "FILTR", "REDUZ", "SORTS", "HEAPS", "TREES", "TRIES", 
+        "DFSFN", "BFSFN", "VISIT", "TRACE", "LOGFN", "PANIC", "CRASH", "ABORT", "RETRY", 
+        "SLEEP", "WAKER", "SCHED", "THRED", "MUTEX", "RAISE", "LOCKS", "RLOCK", "ULOCK", 
+        "SEMPH", "SPAWN", "JOINR", "TASKS", "FUTUR", "PROMS"
     };
-  static bool seeded = false;
+    
+    static bool seeded = false;
     if (!seeded) {
         std::srand(static_cast<unsigned>(std::time(nullptr)));
         seeded = true;
     }
-
     return wordBank[std::rand() % wordBank.size()];
 }
 
-int main(int, char **) {
-    std::string userInput;
-    std::cout << "Enter Text";
-    std::getline(std::cin, userInput);
-std::transform(userInput.begin(), userInput.end(), userInput.begin(), [](unsigned char c) { return std::toupper(c); });
-    std::cout << userInput << std::endl;
-    int numberOfTries = 6;
-    std::vector<std::string> tries(numberOfTries);
-
-    std::string target = getRandomWord();
-
-    
-bool won = false;
-
-
-for (int i = 0; i < WORD_LENGTH; i++){
-    if (guess[i] == target[i]) {
-        result[i] = RIGHT;
+extern "C" {
+    EMSCRIPTEN_KEEPALIVE
+    void init_game() {
+        targetWord = getRandomWord();
+        std::cout << "Target word initialized." << std::endl; 
     }
-}
+    EMSCRIPTEN_KEEPALIVE
+    void check_guess(const char* guess_str, int* result_array) {
+        std::string guess(guess_str);
+        std::transform(guess.begin(), guess.end(), guess.begin(), [](unsigned char c) { 
+            return std::toupper(c); 
+        });
 
-for (int i = 0; i < WORD_LENGTH; i++){
-    if (result[i] != RIGHT) {
-        for (int j = 0; j < WORD_LENGTH; j++){
-            if (result[j] != RIGHT && guess[i] == target[j])
-                result[i] = PARTIAL_RIGHT;
-            break;
+        std::vector<int> result(WORD_LENGTH, NOT_RIGHT);
+        std::vector<bool> targetUsed(WORD_LENGTH, false);
+        std::vector<bool> guessUsed(WORD_LENGTH, false);
+
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            if (guess[i] == targetWord[i]) {
+                result[i] = RIGHT;
+                targetUsed[i] = true;
+                guessUsed[i] = true;
+            }
+        }
+
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            if (guessUsed[i]) continue;
+            
+            for (int j = 0; j < WORD_LENGTH; j++) {
+                if (!targetUsed[j] && guess[i] == targetWord[j]) {
+                    result[i] = PARTIAL_RIGHT;
+                    targetUsed[j] = true;
+                    break;
                 }
             }
         }
+
+        for (int i = 0; i < WORD_LENGTH; i++) {
+            result_array[i] = result[i];
+        }
     }
-    return result;
+}
+
+int main() {
+    init_game();
+    return 0;
 }

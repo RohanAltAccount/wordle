@@ -1,19 +1,73 @@
 <!DOCTYPE html>
 <html lang="en"> 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <h1>Wordle</h1>
-    </header>
-    <main>
-        <section id="introduction"> 
-            <h2>Welcome to Wordle for Coders</h2>
+<header>
+    <h1>Wordle</h1>
+</header>
+<main>
+    <div id="GameBoard"></div>
+    <div class="inputContainer">
+        <input type="text" id="guessInput" maxlength="5" placeholder="GUESS">
+        <button onclick="submitGuess()">ENTER</button>
+    </div>
+    <section id="introduction"> 
+        <h2>Welcome to Wordle for Coders</h2>
     </section>
-    </main>
-    </body>
+</main>
+<script src="index.js"></script>
+<script>
+    let attempts = 0;
+    const maxAttempts = 6;
+    const board = document.getElementById('GameBoard');
+
+    for (let i = 0; i < maxAttempts * 5; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.id = 'cell-' + i;
+        board.appendChild(cell);
+    }
+
+    function submitGuess() {
+        const input = document.getElementById('guessInput');
+        const guess = input.value.toUpperCase();
+
+        if (guess.length !== 5) {
+            alert("Try again. You really thought you could get away with that, huh?");
+            return;
+        }
+
+        if (attempts >= maxAttempts) {
+            alert("You lost lol");
+            return;
+        }
+        const resultPtr = Module._malloc(5 * 4);
+        Module.ccall('check_guess', null, ['string', 'number'], [guess, resultPtr]);
+        const results = new Int32Array(Module.HEAP32.buffer, resultPtr, 5);
+        for (let i = 0; i < 5; i++) {
+            const cellIndex = (attempts * 5) + i;
+            const cell = document.getElementById('cell-' + cellIndex);
+            cell.innerText = guess[i];
+
+            if (results[i] === 2) {
+                cell.classList.add('correct');
+            } else if (results[i] === 1) {
+                cell.classList.add('present');
+            } else {
+                cell.classList.add('absent');
+            }
+        }
+        Module._free(resultPtr);
+        attempts++;
+        input.value = '';
+    }
+</script>
+
+    
+</body>
 </html>
