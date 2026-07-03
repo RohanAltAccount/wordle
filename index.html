@@ -11,7 +11,7 @@
     <h1>Wordle</h1>
 </header>
 <main>
-    <div id="GameBoard"></div>
+    <div id="board"></div>
     <div class="inputContainer">
         <input type="text" id="guessInput" maxlength="5" placeholder="GUESS">
         <button onclick="submitGuess()">ENTER</button>
@@ -24,7 +24,7 @@
 <script>
     let attempts = 0;
     const maxAttempts = 6;
-    const board = document.getElementById('GameBoard');
+    const board = document.getElementById('board');
 
     for (let i = 0; i < maxAttempts * 5; i++) {
         const cell = document.createElement('div');
