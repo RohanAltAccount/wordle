@@ -88,3 +88,15 @@ int main() {
     init_game();
     return 0;
 }
+
+
+/* 
+
+compiler command vvv
+
+emcc main.cpp -o index.js -s EXPORTED_FUNCTIONS='["_main", "_init_game", "_check_guess", "_malloc", "_free"]' -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -s NO_EXIT_RUNTIME=1
+
+python3 -m http.server 8000
+
+
+*/
