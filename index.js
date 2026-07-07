@@ -1,15 +1,15 @@
-// include: shell.js
-// include: minimum_runtime_check.js
+
+
 (function() {
-  // "30.0.0" -> 300000
+ 
   function humanReadableVersionToPacked(str) {
-    str = str.split('-')[0]; // Remove any trailing part from e.g. "12.53.3-alpha"
+    str = str.split('-')[0];
     var vers = str.split('.').slice(0, 3);
     while(vers.length < 3) vers.push('00');
     vers = vers.map((n, i, arr) => n.padStart(2, '0'));
     return vers.join('');
   }
-  // 300000 -> "30.0.0"
+ 
   var packedVersionToHumanReadable = n => [n / 10000 | 0, (n / 100 | 0) % 100, n % 100].join('.');
 
   var TARGET_NOT_SUPPORTED = 2147483647;
@@ -44,8 +44,8 @@
 var Module = typeof Module != 'undefined' ? Module : {};
 var ENVIRONMENT_IS_WEB = !!globalThis.window;
 var ENVIRONMENT_IS_WORKER = !!globalThis.WorkerGlobalScope;
-// N.b. Electron.js environment is simultaneously a NODE-environment, but
-// also a web environment.
+
+
 var ENVIRONMENT_IS_NODE = globalThis.process?.versions?.node && globalThis.process?.type != 'renderer';
 var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
@@ -58,14 +58,14 @@ var quit_ = (status, toThrow) => {
 };
 var _scriptName = globalThis.document?.currentScript?.src;
 
-if (typeof __filename != 'undefined') { // Node
+if (typeof __filename != 'undefined') {
   _scriptName = __filename;
 } else
 if (ENVIRONMENT_IS_WORKER) {
   _scriptName = self.location.href;
 }
 
-// `/` should be present at the end if `scriptDirectory` is not empty
+
 var scriptDirectory = '';
 function locateFile(path) {
   if (Module['locateFile']) {
@@ -85,7 +85,7 @@ if (ENVIRONMENT_IS_NODE) {
   scriptDirectory = __dirname + '/';
 
 readBinary = (filename) => {
-  // We need to re-wrap `file://` strings to URLs.
+ 
   filename = isFileURI(filename) ? new URL(filename) : filename;
   var ret = fs.readFileSync(filename);
   assert(Buffer.isBuffer(ret));
@@ -121,10 +121,10 @@ if (ENVIRONMENT_IS_SHELL) {
 
 if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
   try {
-    scriptDirectory = new URL('.', _scriptName).href; // includes trailing slash
+    scriptDirectory = new URL('.', _scriptName).href;
   } catch {
-    // Must be a `blob:` or `data:` URL (e.g. `blob:http://site.com/etc/etc`), we cannot
-    // infer anything from them.
+   
+   
   }
 
   if (!(globalThis.window || globalThis.WorkerGlobalScope)) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
@@ -136,22 +136,22 @@ if (ENVIRONMENT_IS_WORKER) {
       xhr.open('GET', url, false);
       xhr.responseType = 'arraybuffer';
       xhr.send(null);
-      return new Uint8Array(/** @type{!ArrayBuffer} */(xhr.response));
+      return new Uint8Array((xhr.response));
     };
   }
 
   readAsync = async (url) => {
-    // Fetch has some additional restrictions over XHR, like it can't be used on a file:// url.
-    // See https://github.com/github/fetch/pull/92#issuecomment-140665932
-    // Cordova or Electron apps are typically loaded from a file:// url.
-    // So use XHR on webview if URL is a file URL.
+   
+   
+   
+   
     if (isFileURI(url)) {
       return new Promise((resolve, reject) => {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.responseType = 'arraybuffer';
         xhr.onload = () => {
-          if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) { // file URLs can return 0
+          if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) {
             resolve(xhr.response);
             return;
           }
@@ -167,7 +167,7 @@ if (ENVIRONMENT_IS_WORKER) {
     }
     throw new Error(response.status + ' : ' + response.url);
   };
-// end include: web_or_worker_shell_read.js
+
   }
 } else
 {
@@ -215,14 +215,14 @@ function writeStackCookie() {
 
   HEAPU32[((max)>>2)] = 0x02135467;
   HEAPU32[(((max)+(4))>>2)] = 0x89BACDFE;
-  // Also test the global address 0 for integrity.
+ 
   HEAPU32[((0)>>2)] = 1668509029;
 }
 
 function checkStackCookie() {
   if (ABORT) return;
   var max = _emscripten_stack_get_end();
-  // See writeStackCookie().
+ 
   if (max == 0) {
     max += 4;
   }
@@ -231,7 +231,7 @@ function checkStackCookie() {
   if (cookie1 != 0x02135467 || cookie2 != 0x89BACDFE) {
     abort(`Stack overflow! Stack cookie has been overwritten at ${ptrToString(max)}, expected hex dwords 0x89BACDFE and 0x2135467, but received ${ptrToString(cookie2)} ${ptrToString(cookie1)}`);
   }
-  if (HEAPU32[((0)>>2)] != 0x63736d65 /* 'emsc' */) {
+  if (HEAPU32[((0)>>2)] != 0x63736d65 ) {
     abort('Runtime error: The application has corrupted its heap memory area (address zero)!');
   }
 }
@@ -240,11 +240,11 @@ class EmscriptenEH {}
 class EmscriptenSjLj extends EmscriptenEH {}
 
 
-var runtimeDebug = true; // Switch to false at runtime to disable logging at the right times
+var runtimeDebug = true;
 function dbg(...args) {
   if (!runtimeDebug && typeof runtimeDebug != 'undefined') return;
-  // TODO(sbc): Make this configurable somehow.  Its not always convenient for
-  // logging to show up as warnings.
+ 
+ 
   console.warn(...args);
 }
 
@@ -345,8 +345,8 @@ function missingLibrarySymbol(sym) {
     warnOnce(msg);
   });
 
-  // Any symbol that is not included from the JS library is also (by definition)
-  // not exported on the Module object.
+ 
+ 
   unexportedRuntimeSymbol(sym);
 }
 
@@ -408,7 +408,7 @@ function initRuntime() {
 
   checkStackCookie();
 
-  // begin ATINITS hooks below/here
+ 
   if (!Module['noFSInit'] && !FS.initialized) FS.init();
 TTY.init();
 
@@ -432,7 +432,7 @@ function postRun() {
   consumedModuleProp('postRun');
 
   callRuntimeCallbacks(onPostRuns);
-  // should i comment everything
+ 
 }
 
 /**
@@ -503,7 +503,7 @@ async function instantiateArrayBuffer(binaryFile, imports) {
   } catch (reason) {
     err(`failed to asynchronously prepare wasm: ${reason}`);
 
-    // Warn on some common problems.
+   
     if (isFileURI(binaryFile)) {
       err(`warning: Loading from a file URI (${binaryFile}) is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing`);
     }
@@ -531,7 +531,7 @@ async function instantiateAsync(binary, binaryFile, imports) {
 }
 
 function getWasmImports() {
-  // prepare imports
+ 
   var imports = {
     'env': wasmImports,
     'wasi_snapshot_preview1': wasmImports,
@@ -541,9 +541,9 @@ function getWasmImports() {
 
 
 async function createWasm() {
-  // Load the wasm module and create an instance of using native support in the JS engine.
-  // handle a generated wasm instance, receiving its exports and
-  // performing other necessary setup
+ 
+ 
+ 
   function receiveInstance(instance) {
     wasmExports = instance.exports;
 
@@ -554,29 +554,29 @@ async function createWasm() {
     return wasmExports;
   }
 
-  // Prefer streaming instantiation if available.
-  // Async compilation can be confusing when an error on the page overwrites Module
-  // (for example, if the order of elements is wrong, and the one defining Module is
-  // later), so we save Module and check it later.
+ 
+ 
+ 
+ 
   var trueModule = Module;
   function receiveInstantiationResult(result) {
-    // 'result' is a ResultObject object which has both the module and instance.
-    // receiveInstance() will swap in the exports (to Module.asm) so they can be called
+   
+   
     assert(Module === trueModule, 'the Module object should not be replaced during async compilation - perhaps the order of HTML elements is wrong?');
     trueModule = null;
-    // TODO: Due to Closure regression https://github.com/google/closure-compiler/issues/3193, the above line no longer optimizes out down to the following line.
-    // When the regression is fixed, can restore the above PTHREADS-enabled path.
+   
+   
     return receiveInstance(result['instance']);
   }
 
   var info = getWasmImports();
 
-  // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
-  // to manually instantiate the Wasm module themselves. This allows pages to
-  // run the instantiation parallel to any other async startup actions they are
-  // performing.
-  // Also pthreads and wasm workers initialize the wasm instance through this
-  // path.
+ 
+ 
+ 
+ 
+ 
+ 
   var instantiateWasm = Module['instantiateWasm'];
   if (instantiateWasm) {
     return new Promise((resolve) => {
@@ -595,9 +595,9 @@ async function createWasm() {
   return exports;
 }
 
-// end include: preamble.js
 
-// Begin JS library code
+
+
 
 
   class ExitStatus {
@@ -608,39 +608,39 @@ async function createWasm() {
       }
     }
 
-  /** @type {!Int16Array} */
+  
   var HEAP16;
 
-  /** @type {!Int32Array} */
+  
   var HEAP32;
 
-  /** not-@type {!BigInt64Array} */
+  
   var HEAP64;
 
-  /** @type {!Int8Array} */
+  
   var HEAP8;
 
-  /** @type {!Float32Array} */
+  
   var HEAPF32;
 
-  /** @type {!Float64Array} */
+  
   var HEAPF64;
 
-  /** @type {!Uint16Array} */
+  
   var HEAPU16;
 
-  /** @type {!Uint32Array} */
+  
   var HEAPU32;
 
-  /** not-@type {!BigUint64Array} */
+  
   var HEAPU64;
 
-  /** @type {!Uint8Array} */
+  
   var HEAPU8;
 
   var callRuntimeCallbacks = (callbacks) => {
       while (callbacks.length > 0) {
-        // Pass the module as the first argument.
+       
         callbacks.shift()(Module);
       }
     };
@@ -675,7 +675,7 @@ async function createWasm() {
 
   function ptrToString(ptr) {
       assert(typeof ptr === 'number', `ptrToString expects a number, got ${typeof ptr}`);
-      // Convert to 32-bit unsigned value
+     
       ptr >>>= 0;
       return '0x' + ptr.toString(16).padStart(8, '0');
     }
@@ -717,7 +717,7 @@ async function createWasm() {
   
 
   class ExceptionInfo {
-      // excPtr - Thrown object pointer to wrap. Metadata pointer is calculated from it.
+     
       constructor(excPtr) {
         this.excPtr = excPtr;
         this.ptr = excPtr - 24;
@@ -757,7 +757,7 @@ async function createWasm() {
         return HEAP8[(this.ptr)+(13)] != 0;
       }
   
-      // Initialize native structure fields. Should be called once after allocated.
+     
       init(type, destructor) {
         this.set_adjusted_ptr(0);
         this.set_type(type);
@@ -776,7 +776,7 @@ async function createWasm() {
   var uncaughtExceptionCount = 0;
   var ___cxa_throw = (ptr, type, destructor) => {
       var info = new ExceptionInfo(ptr);
-      // Initialize ExceptionInfo content after it was allocated in __cxa_allocate_exception.
+     
       info.init(type, destructor);
       uncaughtExceptionCount++;
       assert(false, 'Exception thrown, but exception catching is not enabled. Compile with -sNO_DISABLE_EXCEPTION_CATCHING or -sEXCEPTION_CATCHING_ALLOWED=[..] to catch.');
@@ -787,17 +787,17 @@ async function createWasm() {
 
   var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
       assert(typeof str === 'string', `stringToUTF8Array expects a string (got ${typeof str})`);
-      // Parameter maxBytesToWrite is not optional. Negative values, 0, null,
-      // undefined and false each don't write out any bytes.
+     
+     
       if (!(maxBytesToWrite > 0))
         return 0;
   
       var startIdx = outIdx;
-      var endIdx = outIdx + maxBytesToWrite - 1; // -1 for string null terminator.
+      var endIdx = outIdx + maxBytesToWrite - 1;
       for (var i = 0; i < str.length; ++i) {
-        // For UTF8 byte structure, see http://en.wikipedia.org/wiki/UTF-8#Description
-        // and https://www.ietf.org/rfc/rfc2279.txt
-        // and https://tools.ietf.org/html/rfc3629
+       
+       
+       
         var u = str.codePointAt(i);
         if (u <= 0x7F) {
           if (outIdx >= endIdx) break;
@@ -818,12 +818,12 @@ async function createWasm() {
           heap[outIdx++] = 0x80 | ((u >> 12) & 63);
           heap[outIdx++] = 0x80 | ((u >> 6) & 63);
           heap[outIdx++] = 0x80 | (u & 63);
-          // Gotcha: if codePoint is over 0xFFFF, it is represented as a surrogate pair in UTF-16.
-          // We need to manually skip over the second code unit for correct iteration.
+         
+         
           i++;
         }
       }
-      // Null-terminate the pointer to the buffer.
+     
       heap[outIdx] = 0;
       return outIdx - startIdx;
     };
@@ -835,11 +835,11 @@ async function createWasm() {
   var lengthBytesUTF8 = (str) => {
       var len = 0;
       for (var i = 0; i < str.length; ++i) {
-        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
-        // unit, not a Unicode code point of the character! So decode
-        // UTF16->UTF32->UTF8.
-        // See http://unicode.org/faq/utf_bom.html#utf16-3
-        var c = str.charCodeAt(i); // possibly a lead surrogate
+       
+       
+       
+       
+        var c = str.charCodeAt(i);
         if (c <= 0x7F) {
           len++;
         } else if (c <= 0x7FF) {
@@ -853,33 +853,33 @@ async function createWasm() {
       return len;
     };
   var __tzset_js = (timezone, daylight, std_name, dst_name) => {
-      // TODO: Use (malleable) environment variables instead of system settings.
+     
       var currentYear = new Date().getFullYear();
       var winter = new Date(currentYear, 0, 1);
       var summer = new Date(currentYear, 6, 1);
       var winterOffset = winter.getTimezoneOffset();
       var summerOffset = summer.getTimezoneOffset();
   
-      // Local standard timezone offset. Local standard time is not adjusted for
-      // daylight savings.  This code uses the fact that getTimezoneOffset returns
-      // a greater value during Standard Time versus Daylight Saving Time (DST).
-      // Thus it determines the expected output during Standard Time, and it
-      // compares whether the output of the given date the same (Standard) or less
-      // (DST).
+     
+     
+     
+     
+     
+     
       var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
   
-      // timezone is specified as seconds west of UTC ("The external variable
-      // `timezone` shall be set to the difference, in seconds, between
-      // Coordinated Universal Time (UTC) and local standard time."), the same
-      // as returned by stdTimezoneOffset.
-      // See http://pubs.opengroup.org/onlinepubs/009695399/functions/tzset.html
+     
+     
+     
+     
+     
       HEAPU32[((timezone)>>2)] = stdTimezoneOffset * 60;
   
       HEAP32[((daylight)>>2)] = Number(winterOffset != summerOffset);
   
       var extractZone = (timezoneOffset) => {
-        // Why inverse sign?
-        // Read here https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getTimezoneOffset
+       
+       
         var sign = timezoneOffset >= 0 ? "-" : "+";
   
         var absOffset = Math.abs(timezoneOffset)
@@ -896,7 +896,7 @@ async function createWasm() {
       assert(lengthBytesUTF8(winterName) <= 16, `timezone name truncated to fit in TZNAME_MAX (${winterName})`);
       assert(lengthBytesUTF8(summerName) <= 16, `timezone name truncated to fit in TZNAME_MAX (${summerName})`);
       if (summerOffset < winterOffset) {
-        // Northern hemisphere
+       
         stringToUTF8(winterName, std_name, 17);
         stringToUTF8(summerName, dst_name, 17);
       } else {
@@ -912,7 +912,7 @@ async function createWasm() {
     };
   var _emscripten_resize_heap = (requestedSize) => {
       var oldSize = HEAPU8.length;
-      // With CAN_ADDRESS_2GB or MEMORY64, pointers are already unsigned.
+     
       requestedSize >>>= 0;
       abortOnCannotGrowMemory(requestedSize);
     };
@@ -923,7 +923,7 @@ async function createWasm() {
   var getExecutableName = () => thisProgram;
   var getEnvStrings = () => {
       if (!getEnvStrings.strings) {
-        // Default values.
+       
         var lang = (globalThis.navigator?.language ?? 'C').replace('-', '_') + '.UTF-8';
         var env = {
           'USER': 'web_user',
@@ -934,11 +934,11 @@ async function createWasm() {
           'LANG': lang,
           '_': getExecutableName()
         };
-        // Apply the user-provided values, if any.
+       
         for (var x in ENV) {
-          // x is a key in ENV; if ENV[x] is undefined, that means it was
-          // explicitly set to be so. We allow user code to do that to
-          // force variables with default values to remain unset.
+         
+         
+         
           if (ENV[x] === undefined) delete env[x];
           else env[x] = ENV[x];
         }
@@ -982,7 +982,7 @@ async function createWasm() {
         return splitPathRe.exec(filename).slice(1);
       },
   normalizeArray:(parts, allowAboveRoot) => {
-        // if the path tries to go above the root, `up` ends up > 0
+       
         var up = 0;
         for (var i = parts.length - 1; i >= 0; i--) {
           var last = parts[i];
@@ -996,7 +996,7 @@ async function createWasm() {
             up--;
           }
         }
-        // if the path is allowed to go above the root, restore leading ..s
+       
         if (allowAboveRoot) {
           for (; up; up--) {
             parts.unshift('..');
@@ -1007,7 +1007,7 @@ async function createWasm() {
   normalize:(path) => {
         var isAbsolute = PATH.isAbs(path),
             trailingSlash = path.slice(-1) === '/';
-        // Normalize the path
+       
         path = PATH.normalizeArray(path.split('/').filter((p) => !!p), !isAbsolute).join('/');
         if (!path && !isAbsolute) {
           path = '.';
@@ -1022,11 +1022,11 @@ async function createWasm() {
             root = result[0],
             dir = result[1];
         if (!root && !dir) {
-          // No dirname whatsoever
+         
           return '.';
         }
         if (dir) {
-          // It has a dirname, strip trailing slash
+         
           dir = dir.slice(0, -1);
         }
         return root + dir;
@@ -1037,7 +1037,7 @@ join2:(l, r) => PATH.normalize(l + '/' + r),
 };
 
 var initRandomFill = () => {
-    // This block is not needed on v19+ since crypto.getRandomValues is builtin
+   
     if (ENVIRONMENT_IS_NODE) {
       var nodeCrypto = require('node:crypto');
       return (view) => (nodeCrypto.randomFillSync(view), 0);
@@ -1055,17 +1055,17 @@ resolve:(...args) => {
         resolvedAbsolute = false;
       for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
         var path = (i >= 0) ? args[i] : FS.cwd();
-        // Skip empty and invalid entries
+       
         if (typeof path != 'string') {
           throw new TypeError('Arguments to path.resolve must be strings');
         } else if (!path) {
-          return ''; // an invalid portion invalidates the whole thing
+          return '';
         }
         resolvedPath = path + '/' + resolvedPath;
         resolvedAbsolute = PATH.isAbs(path);
       }
-      // At this point the path should be resolved to a full absolute path, but
-      // handle relative paths to be safe (might happen when process.cwd() fails)
+     
+     
       resolvedPath = PATH.normalizeArray(resolvedPath.split('/').filter((p) => !!p), !resolvedAbsolute).join('/');
       return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
     },
@@ -1117,10 +1117,10 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
       var maxIdx = idx + maxBytesToRead;
       if (ignoreNul) return maxIdx;
-      // TextDecoder needs to know the byte length in advance, it doesn't stop on
-      // null terminator by itself.
-      // As a tiny code save trick, compare idx against maxIdx using a negation,
-      // so that maxBytesToRead=undefined/NaN means Infinity.
+     
+     
+     
+     
       while (heapOrArray[idx] && !(idx >= maxIdx)) ++idx;
       return idx;
     };
@@ -1140,16 +1140,16 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   
       var endPtr = findStringEnd(heapOrArray, idx, maxBytesToRead, ignoreNul);
   
-      // When using conditional TextDecoder, skip it for short strings as the overhead of the native call is not worth it.
+     
       if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
         return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
       }
       var str = '';
       while (idx < endPtr) {
-        // For UTF8 byte structure, see:
-        // http://en.wikipedia.org/wiki/UTF-8#Description
-        // https://www.ietf.org/rfc/rfc2279.txt
-        // https://tools.ietf.org/html/rfc3629
+       
+       
+       
+       
         var u0 = heapOrArray[idx++];
         if (!(u0 & 0x80)) { str += String.fromCharCode(u0); continue; }
         var u1 = heapOrArray[idx++] & 63;
@@ -1175,7 +1175,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   var FS_stdin_getChar_buffer = [];
   
   
-  /** @type {function(string, boolean=, number=)} */
+  
   var intArrayFromString = (stringy, dontAddNull, length) => {
       var len = length > 0 ? length : lengthBytesUTF8(stringy)+1;
       var u8array = new Array(len);
@@ -1187,26 +1187,26 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       if (!FS_stdin_getChar_buffer.length) {
         var result = null;
         if (ENVIRONMENT_IS_NODE) {
-          // we will read data by chunks of BUFSIZE
+         
           var BUFSIZE = 256;
           var buf = Buffer.alloc(BUFSIZE);
           var bytesRead = 0;
   
-          // For some reason we must suppress a closure warning here, even though
-          // fd definitely exists on process.stdin, and is even the proper way to
-          // get the fd of stdin,
-          // https://github.com/nodejs/help/issues/2136#issuecomment-523649904
-          // This started to happen after moving this logic out of library_tty.js,
-          // so it is related to the surrounding code in some unclear manner.
-          /** @suppress {missingProperties} */
+         
+         
+         
+         
+         
+         
+          
           var fd = process.stdin.fd;
   
           try {
             bytesRead = fs.readSync(fd, buf, 0, BUFSIZE);
           } catch(e) {
-            // Cross-platform differences: on Windows, reading EOF throws an
-            // exception, but on other OSes, reading EOF returns 0. Uniformize
-            // behavior by treating the EOF exception to return 0.
+           
+           
+           
             if (e.toString().includes('EOF')) bytesRead = 0;
             else throw e;
           }
@@ -1216,8 +1216,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           }
         } else
         if (globalThis.window?.prompt) {
-          // Browser.
-          result = window.prompt('Input: ');  // returns null on cancel
+         
+          result = window.prompt('Input: '); 
           if (result !== null) {
             result += '\n';
           }
@@ -1233,25 +1233,25 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   var TTY = {
   ttys:[],
   init() {
-        // https://github.com/emscripten-core/emscripten/pull/1555
-        // if (ENVIRONMENT_IS_NODE) {
-        //   // currently, FS.init does not distinguish if process.stdin is a file or TTY
-        //   // device, it always assumes it's a TTY device. because of this, we're forcing
-        //   // process.stdin to UTF8 encoding to at least make stdin reading compatible
-        //   // with text files until FS.init can be refactored.
-        //   process.stdin.setEncoding('utf8');
-        // }
+       
+       
+       
+       
+       
+       
+       
+       
       },
   shutdown() {
-        // https://github.com/emscripten-core/emscripten/pull/1555
-        // if (ENVIRONMENT_IS_NODE) {
-        //   // inolen: any idea as to why node -e 'process.stdin.read()' wouldn't exit immediately (with process.stdin being a tty)?
-        //   // isaacs: because now it's reading from the stream, you've expressed interest in it, so that read() kicks off a _read() which creates a ReadReq operation
-        //   // inolen: I thought read() in that case was a synchronous operation that just grabbed some amount of buffered data if it exists?
-        //   // isaacs: it is. but it also triggers a _read() call, which calls readStart() on the handle
-        //   // isaacs: do process.stdin.pause() and i'd think it'd probably close the pending call
-        //   process.stdin.pause();
-        // }
+       
+       
+       
+       
+       
+       
+       
+       
+       
       },
   register(dev, ops) {
         TTY.ttys[dev] = { input: [], output: [], ops: ops };
@@ -1267,13 +1267,13 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           stream.seekable = false;
         },
   close(stream) {
-          // flush any pending line data
+         
           stream.tty.ops.fsync(stream.tty);
         },
   fsync(stream) {
           stream.tty.ops.fsync(stream.tty);
         },
-  read(stream, buffer, offset, length, pos /* ignored */) {
+  read(stream, buffer, offset, length, pos ) {
           if (!stream.tty || !stream.tty.ops.get_char) {
             throw new FS.ErrnoError(60);
           }
@@ -1323,7 +1323,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             out(UTF8ArrayToString(tty.output));
             tty.output = [];
           } else {
-            if (val != 0) tty.output.push(val); // val == 0 would cut text output off in the middle.
+            if (val != 0) tty.output.push(val);
           }
         },
   fsync(tty) {
@@ -1333,7 +1333,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           }
         },
   ioctl_tcgets(tty) {
-          // typical setting
+         
           return {
             c_iflag: 25856,
             c_oflag: 5,
@@ -1347,7 +1347,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           };
         },
   ioctl_tcsets(tty, optional_actions, data) {
-          // currently just ignore
+         
           return 0;
         },
   ioctl_tiocgwinsz(tty) {
@@ -1383,7 +1383,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       },
   createNode(parent, name, mode, dev) {
         if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
-          // not supported
+         
           throw new FS.ErrnoError(63);
         }
         MEMFS.ops_table ||= {
@@ -1440,13 +1440,13 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         } else if (FS.isFile(node.mode)) {
           node.node_ops = MEMFS.ops_table.file.node;
           node.stream_ops = MEMFS.ops_table.file.stream;
-          // The actual number of bytes used in the typed array, as opposed to
-          // contents.length which gives the whole capacity.
+         
+         
           node.usedBytes = 0;
-          // The byte data of the file is stored in a typed array.
-          // Note: typed arrays are not resizable like normal JS arrays are, so
-          // there is a small penalty involved for appending file writes that
-          // continuously grow a file similar to std::vector capacity vs used.
+         
+         
+         
+         
           node.contents = MEMFS.emptyFileContents ??= new Uint8Array(0);
         } else if (FS.isLink(node.mode)) {
           node.node_ops = MEMFS.ops_table.link.node;
@@ -1456,7 +1456,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           node.stream_ops = MEMFS.ops_table.chrdev.stream;
         }
         node.atime = node.mtime = node.ctime = Date.now();
-        // add the new node to the parent
+       
         if (parent) {
           parent.contents[name] = node;
           parent.atime = parent.mtime = parent.ctime = node.atime;
@@ -1465,34 +1465,34 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       },
   getFileDataAsTypedArray(node) {
         assert(FS.isFile(node.mode), 'getFileDataAsTypedArray called on non-file');
-        return node.contents.subarray(0, node.usedBytes); // Make sure to not return excess unused bytes.
+        return node.contents.subarray(0, node.usedBytes);
       },
   expandFileStorage(node, newCapacity) {
         var prevCapacity = node.contents.length;
-        if (prevCapacity >= newCapacity) return; // No need to expand, the storage was already large enough.
-        // Don't expand strictly to the given requested limit if it's only a very
-        // small increase, but instead geometrically grow capacity.
-        // For small filesizes (<1MB), perform size*2 geometric increase, but for
-        // large sizes, do a much more conservative size*1.125 increase to avoid
-        // overshooting the allocation cap by a very large margin.
+        if (prevCapacity >= newCapacity) return;
+       
+       
+       
+       
+       
         var CAPACITY_DOUBLING_MAX = 1024 * 1024;
         newCapacity = Math.max(newCapacity, (prevCapacity * (prevCapacity < CAPACITY_DOUBLING_MAX ? 2.0 : 1.125)) >>> 0);
-        if (prevCapacity) newCapacity = Math.max(newCapacity, 256); // At minimum allocate 256b for each file when expanding.
+        if (prevCapacity) newCapacity = Math.max(newCapacity, 256);
         var oldContents = MEMFS.getFileDataAsTypedArray(node);
-        node.contents = new Uint8Array(newCapacity); // Allocate new storage.
+        node.contents = new Uint8Array(newCapacity);
         node.contents.set(oldContents);
       },
   resizeFileStorage(node, newSize) {
         if (node.usedBytes == newSize) return;
         var oldContents = node.contents;
-        node.contents = new Uint8Array(newSize); // Allocate new storage.
-        node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes))); // Copy old data over to the new storage.
+        node.contents = new Uint8Array(newSize);
+        node.contents.set(oldContents.subarray(0, Math.min(newSize, node.usedBytes)));
         node.usedBytes = newSize;
       },
   node_ops:{
   getattr(node) {
           var attr = {};
-          // device numbers reuse inode numbers.
+         
           attr.dev = FS.isChrdev(node.mode) ? node.id : 1;
           attr.ino = node.id;
           attr.mode = node.mode;
@@ -1512,8 +1512,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           attr.atime = new Date(node.atime);
           attr.mtime = new Date(node.mtime);
           attr.ctime = new Date(node.ctime);
-          // NOTE: In our implementation, st_blocks = Math.ceil(st_size/st_blksize),
-          //       but this is not required by the standard.
+         
+         
           attr.blksize = 4096;
           attr.blocks = Math.ceil(attr.size / attr.blksize);
           return attr;
@@ -1541,14 +1541,14 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           } catch (e) {}
           if (new_node) {
             if (FS.isDir(old_node.mode)) {
-              // if we're overwriting a directory at new_name, make sure it's empty.
+             
               for (var i in new_node.contents) {
                 throw new FS.ErrnoError(55);
               }
             }
             FS.hashRemoveNode(new_node);
           }
-          // do the internal rewiring
+         
           delete old_node.parent.contents[old_node.name];
           new_dir.contents[new_name] = old_node;
           old_node.name = new_name;
@@ -1601,12 +1601,12 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             assert(position === 0, 'canOwn must imply no weird position inside the file');
             node.contents = buffer.subarray(offset, offset + length);
             node.usedBytes = length;
-          } else if (node.usedBytes === 0 && position === 0) { // If this is a simple first write to an empty file, do a fast set since we don't need to care about old data.
+          } else if (node.usedBytes === 0 && position === 0) {
             node.contents = buffer.slice(offset, offset + length);
             node.usedBytes = length;
           } else {
             MEMFS.expandFileStorage(node, position+length);
-            // Use typed array write which is available.
+           
             node.contents.set(buffer.subarray(offset, offset + length), position);
             node.usedBytes = Math.max(node.usedBytes, position + length);
           }
@@ -1633,10 +1633,10 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           var ptr;
           var allocated;
           var contents = stream.node.contents;
-          // Only make a new copy when MAP_PRIVATE is specified.
+         
           if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
-            // We can't emulate MAP_SHARED when the file is not backed by the
-            // buffer we're mapping to (e.g. the HEAP buffer).
+           
+           
             allocated = false;
             ptr = contents.byteOffset;
           } else {
@@ -1646,7 +1646,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
               throw new FS.ErrnoError(48);
             }
             if (contents) {
-              // Try to avoid unnecessary slices.
+             
               if (position > 0 || position + length < contents.length) {
                 if (contents.subarray) {
                   contents = contents.subarray(position, position + length);
@@ -1661,7 +1661,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         },
   msync(stream, buffer, offset, length, mmapFlags) {
           MEMFS.stream_ops.write(stream, buffer, 0, length, offset, false);
-          // should we check if bytesWritten and length are the same?
+         
           return 0;
         },
   },
@@ -1908,7 +1908,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       assert(!runDependencyTracking[id]);
       runDependencyTracking[id] = 1;
       if (runDependencyWatcher === null && globalThis.setInterval) {
-        // Check for missing dependencies every few seconds
+       
         runDependencyWatcher = setInterval(() => {
           if (ABORT) {
             clearInterval(runDependencyWatcher);
@@ -1927,8 +1927,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             err('(end of list)');
           }
         }, 10000);
-        // Prevent this timer from keeping the runtime alive if nothing
-        // else is.
+       
+       
         runDependencyWatcher.unref?.()
       }
     };
@@ -1936,7 +1936,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   
   var preloadPlugins = [];
   var FS_handledByPreloadPlugin = async (byteArray, fullname) => {
-      // Ensure plugins are ready.
+     
       if (typeof Browser != 'undefined') Browser.init();
   
       for (var plugin of preloadPlugins) {
@@ -1945,15 +1945,15 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           return plugin['handle'](byteArray, fullname);
         }
       }
-      // If no plugin handled this file then return the original/unmodified
-      // byteArray.
+     
+     
       return byteArray;
     };
   var FS_preloadFile = async (parent, name, url, canRead, canWrite, dontCreateFile, canOwn, preFinish) => {
-      // TODO we should allow people to just pass in a complete filename instead
-      // of parent and name being that we just join them anyways
+     
+     
       var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
-      var dep = getUniqueRunDependency(`cp ${fullname}`); // might have several active requests for the same fullname
+      var dep = getUniqueRunDependency(`cp ${fullname}`);
       addRunDependency(dep);
   
       try {
@@ -1989,12 +1989,12 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   syncFSRequests:0,
   ErrnoError:class extends Error {
         name = 'ErrnoError';
-        // We set the `name` property to be able to identify `FS.ErrnoError`
-        // - the `name` is a standard ECMA-262 property of error objects. Kind of good to have it anyway.
-        // - when using PROXYFS, an error can come from an underlying FS
-        // as different FS objects have their own FS.ErrnoError each,
-        // the test `err instanceof FS.ErrnoError` won't detect an error coming from another filesystem, causing bugs.
-        // we'll use the reliable test `err.name == "ErrnoError"` instead
+       
+       
+       
+       
+       
+       
         constructor(errno) {
           super(runtimeInitialized ? strError(errno) : '');
           this.errno = errno;
@@ -2044,7 +2044,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         mounted = null;
         constructor(parent, name, mode, rdev) {
           if (!parent) {
-            parent = this;  // root node sets parent to itself
+            parent = this; 
           }
           this.parent = parent;
           this.mount = parent.mount;
@@ -2083,19 +2083,19 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           path = FS.cwd() + '/' + path;
         }
   
-        // limit max consecutive symlinks to SYMLOOP_MAX.
+       
         linkloop: for (var nlinks = 0; nlinks < 40; nlinks++) {
-          // split the absolute path
+         
           var parts = path.split('/').filter((p) => !!p);
   
-          // start at the root
+         
           var current = FS.root;
           var current_path = '/';
   
           for (var i = 0; i < parts.length; i++) {
             var islast = (i === parts.length-1);
             if (islast && opts.parent) {
-              // stop resolving
+             
               break;
             }
   
@@ -2107,8 +2107,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
               current_path = PATH.dirname(current_path);
               if (FS.isRoot(current)) {
                 path = current_path + '/' + parts.slice(i + 1).join('/');
-                // We're making progress here, don't let many consecutive ..'s
-                // lead to ELOOP
+               
+               
                 nlinks--;
                 continue linkloop;
               } else {
@@ -2121,22 +2121,22 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             try {
               current = FS.lookupNode(current, parts[i]);
             } catch (e) {
-              // if noent_okay is true, suppress a ENOENT in the last component
-              // and return an object with an undefined node. This is needed for
-              // resolving symlinks in the path when creating a file.
+             
+             
+             
               if ((e?.errno === 44) && islast && opts.noent_okay) {
                 return { path: current_path };
               }
               throw e;
             }
   
-            // jump to the mount's root node if this is a mountpoint
+           
             if (FS.isMountpoint(current) && (!islast || opts.follow_mount)) {
               current = current.mounted.root;
             }
   
-            // by default, lookupPath will not follow a symlink if it is the final path component.
-            // setting opts.follow = true will override this behavior.
+           
+           
             if (FS.isLink(current.mode) && (!islast || opts.follow)) {
               if (!current.node_ops.readlink) {
                 throw new FS.ErrnoError(52);
@@ -2205,7 +2205,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             return node;
           }
         }
-        // if we failed to find it in the cache, call into the VFS
+       
         return FS.lookup(parent, name);
       },
   createNode(parent, name, mode, rdev) {
@@ -2257,7 +2257,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (FS.ignorePermissions) {
           return 0;
         }
-        // return 0 if any user, group or owner bits are set.
+       
         if (perms.includes('r') && !(node.mode & 292)) {
           return 2;
         }
@@ -2319,8 +2319,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         }
         var mode = FS.flagsToPermissionString(flags);
         if (FS.isDir(node.mode)) {
-          // opening for write
-          // TODO: check for O_SEARCH? (== search for dir only)
+         
+         
           if (mode !== 'r' || (flags & (512 | 64))) {
             return 31;
           }
@@ -2353,7 +2353,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   createStream(stream, fd = -1) {
         assert(fd >= -1);
   
-        // clone it, so we can return an instance of FSStream
+       
         stream = Object.assign(new FS.FSStream(), stream);
         if (fd == -1) {
           fd = FS.nextfd();
@@ -2387,9 +2387,9 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   chrdev_stream_ops:{
   open(stream) {
           var device = FS.getDevice(stream.node.rdev);
-          // override node's stream ops with the device's
+         
           stream.stream_ops = device.stream_ops;
-          // forward the open call
+         
           stream.stream_ops.open?.(stream);
         },
   llseek() {
@@ -2451,7 +2451,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           }
         };
   
-        // sync all mounts
+       
         for (var mount of mounts) {
           if (mount.type.syncfs) {
             mount.type.syncfs(mount, populate, done);
@@ -2462,8 +2462,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       },
   mount(type, opts, mountpoint) {
         if (typeof type == 'string') {
-          // The filesystem was not included, and instead we have an error
-          // message stored in the variable.
+         
+         
           throw type;
         }
         var root = mountpoint === '/';
@@ -2475,7 +2475,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         } else if (!root && !pseudo) {
           var lookup = FS.lookupPath(mountpoint, { follow_mount: false });
   
-          mountpoint = lookup.path;  // use the absolute path
+          mountpoint = lookup.path; 
           node = lookup.node;
   
           if (FS.isMountpoint(node)) {
@@ -2494,7 +2494,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           mounts: []
         };
   
-        // create a root node for the fs
+       
         var mountRoot = type.mount(mount);
         mountRoot.mount = mount;
         mount.root = mountRoot;
@@ -2502,10 +2502,10 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (root) {
           FS.root = mountRoot;
         } else if (node) {
-          // set as a mountpoint
+         
           node.mounted = mount;
   
-          // add the new mount to the current mount's children
+         
           if (node.mount) {
             node.mount.mounts.push(mount);
           }
@@ -2520,7 +2520,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           throw new FS.ErrnoError(28);
         }
   
-        // destroy the nodes for this mount, and all its child mounts
+       
         var node = lookup.node;
         var mount = node.mounted;
         var mounts = FS.getMounts(mount);
@@ -2537,10 +2537,10 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           }
         }
   
-        // no longer a mountpoint
+       
         node.mounted = null;
   
-        // remove this mount from the child mounts
+       
         var idx = node.mount.mounts.indexOf(mount);
         assert(idx !== -1);
         node.mount.mounts.splice(idx, 1);
@@ -2571,15 +2571,15 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         return FS.statfsNode(FS.lookupPath(path, {follow: true}).node);
       },
   statfsStream(stream) {
-        // We keep a separate statfsStream function because noderawfs overrides
-        // it. In noderawfs, stream.node is sometimes null. Instead, we need to
-        // look at stream.path.
+       
+       
+       
         return FS.statfsNode(stream.node);
       },
   statfsNode(node) {
-        // NOTE: None of the defaults here are true. We're just returning safe and
-        //       sane values. Currently nodefs and rawfs replace these defaults,
-        //       other file systems leave them alone.
+       
+       
+       
         var rtn = {
           bsize: 4096,
           frsize: 4096,
@@ -2654,51 +2654,51 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         var new_dirname = PATH.dirname(new_path);
         var old_name = PATH.basename(old_path);
         var new_name = PATH.basename(new_path);
-        // parents must exist
+       
         var lookup, old_dir, new_dir;
   
-        // let the errors from non existent directories percolate up
+       
         lookup = FS.lookupPath(old_path, { parent: true });
         old_dir = lookup.node;
         lookup = FS.lookupPath(new_path, { parent: true });
         new_dir = lookup.node;
   
         if (!old_dir || !new_dir) throw new FS.ErrnoError(44);
-        // need to be part of the same mount
+       
         if (old_dir.mount !== new_dir.mount) {
           throw new FS.ErrnoError(75);
         }
-        // source must exist
+       
         var old_node = FS.lookupNode(old_dir, old_name);
-        // old path should not be an ancestor of the new path
+       
         var relative = PATH_FS.relative(old_path, new_dirname);
         if (relative.charAt(0) !== '.') {
           throw new FS.ErrnoError(28);
         }
-        // new path should not be an ancestor of the old path
+       
         relative = PATH_FS.relative(new_path, old_dirname);
         if (relative.charAt(0) !== '.') {
           throw new FS.ErrnoError(55);
         }
-        // see if the new path already exists
+       
         var new_node;
         try {
           new_node = FS.lookupNode(new_dir, new_name);
         } catch (e) {
-          // not fatal
+         
         }
-        // early out if nothing needs to change
+       
         if (old_node === new_node) {
           return;
         }
-        // we'll need to delete the old entry
+       
         var isdir = FS.isDir(old_node.mode);
         var errCode = FS.mayDelete(old_dir, old_name, isdir);
         if (errCode) {
           throw new FS.ErrnoError(errCode);
         }
-        // need delete permissions if we'll be overwriting.
-        // need create permissions if new doesn't already exist.
+       
+       
         errCode = new_node ?
           FS.mayDelete(new_dir, new_name, isdir) :
           FS.mayCreate(new_dir, new_name);
@@ -2711,26 +2711,26 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (FS.isMountpoint(old_node) || (new_node && FS.isMountpoint(new_node))) {
           throw new FS.ErrnoError(10);
         }
-        // if we are going to change the parent, check write permissions
+       
         if (new_dir !== old_dir) {
           errCode = FS.nodePermissions(old_dir, 'w');
           if (errCode) {
             throw new FS.ErrnoError(errCode);
           }
         }
-        // remove the node from the lookup hash
+       
         FS.hashRemoveNode(old_node);
-        // do the underlying fs rename
+       
         try {
           old_dir.node_ops.rename(old_node, new_dir, new_name);
-          // update old node (we do this here to avoid each backend
-          // needing to)
+         
+         
           old_node.parent = new_dir;
         } catch (e) {
           throw e;
         } finally {
-          // add the node back to the hash (in case node_ops.rename
-          // changed its name)
+         
+         
           FS.hashAddNode(old_node);
         }
       },
@@ -2768,9 +2768,9 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         var node = FS.lookupNode(parent, name);
         var errCode = FS.mayDelete(parent, name, false);
         if (errCode) {
-          // According to POSIX, we should map EISDIR to EPERM, but
-          // we instead do what Linux does (and we must, as we use
-          // the musl linux libc).
+         
+         
+         
           throw new FS.ErrnoError(errCode);
         }
         if (!parent.node_ops.unlink) {
@@ -2839,7 +2839,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         FS.doSetAttr(stream, node, {
           timestamp: Date.now(),
           dontFollow
-          // we ignore the uid / gid for now
+         
         });
       },
   chown(path, uid, gid, dontFollow) {
@@ -2920,9 +2920,9 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           node = path;
         } else {
           isDirPath = path.endsWith("/");
-          // noent_okay makes it so that if the final component of the path
-          // doesn't exist, lookupPath returns `node: undefined`. `path` will be
-          // updated to point to the target of all symlinks.
+         
+         
+         
           var lookup = FS.lookupPath(path, {
             follow: !(flags & 131072),
             noent_okay: true
@@ -2930,21 +2930,21 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           node = lookup.node;
           path = lookup.path;
         }
-        // perhaps we need to create the node
+       
         var created = false;
         if ((flags & 64)) {
           if (node) {
-            // if O_CREAT and O_EXCL are set, error out if the node already exists
+           
             if ((flags & 128)) {
               throw new FS.ErrnoError(20);
             }
           } else if (isDirPath) {
             throw new FS.ErrnoError(31);
           } else {
-            // node doesn't exist, try to create it
-            // Ignore the permission bits here to ensure we can `open` this new
-            // file below. We use chmod below to apply the permissions once the
-            // file is open.
+           
+           
+           
+           
             node = FS.mknod(path, mode | 0o777, 0);
             created = true;
           }
@@ -2952,43 +2952,43 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (!node) {
           throw new FS.ErrnoError(44);
         }
-        // can't truncate a device
+       
         if (FS.isChrdev(node.mode)) {
           flags &= ~512;
         }
-        // if asked only for a directory, then this must be one
+       
         if ((flags & 65536) && !FS.isDir(node.mode)) {
           throw new FS.ErrnoError(54);
         }
-        // check permissions, if this is not a file we just created now (it is ok to
-        // create and write to a file with read-only permissions; it is read-only
-        // for later use)
+       
+       
+       
         if (!created) {
           var errCode = FS.mayOpen(node, flags);
           if (errCode) {
             throw new FS.ErrnoError(errCode);
           }
         }
-        // do truncation if necessary
+       
         if ((flags & 512) && !created) {
           FS.truncate(node, 0);
         }
-        // we've already handled these, don't pass down to the underlying vfs
+       
         flags &= ~(128 | 512 | 131072);
   
-        // register the stream with the filesystem
+       
         var stream = FS.createStream({
           node,
-          path: FS.getPath(node),  // we want the absolute path to the node
+          path: FS.getPath(node), 
           flags,
           seekable: true,
           position: 0,
           stream_ops: node.stream_ops,
-          // used by the file family libc calls (fopen, fwrite, ferror, etc.)
+         
           ungotten: [],
           error: false
         });
-        // call the new stream's open function
+       
         if (stream.stream_ops.open) {
           stream.stream_ops.open(stream);
         }
@@ -3001,7 +3001,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (FS.isClosed(stream)) {
           throw new FS.ErrnoError(8);
         }
-        if (stream.getdents) stream.getdents = null; // free readdir state
+        if (stream.getdents) stream.getdents = null;
         try {
           if (stream.stream_ops.close) {
             stream.stream_ops.close(stream);
@@ -3076,7 +3076,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           throw new FS.ErrnoError(28);
         }
         if (stream.seekable && stream.flags & 1024) {
-          // seek to the end before writing in append mode
+         
           FS.llseek(stream, 0, 2);
         }
         var seeking = typeof position != 'undefined';
@@ -3090,12 +3090,12 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         return bytesWritten;
       },
   mmap(stream, length, position, prot, flags) {
-        // User requests writing to file (prot & PROT_WRITE != 0).
-        // Checking if we have permissions to write to the file unless
-        // MAP_PRIVATE flag is set. According to POSIX spec it is possible
-        // to write to file opened in read-only mode with MAP_PRIVATE flag,
-        // as all modifications will be visible only in the memory of
-        // the current process.
+       
+       
+       
+       
+       
+       
         if ((prot & 2) !== 0
             && (flags & 2) === 0
             && (stream.flags & 2097155) !== 2) {
@@ -3170,24 +3170,24 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         FS.mkdir('/home/web_user');
       },
   createDefaultDevices() {
-        // create /dev
+       
         FS.mkdir('/dev');
-        // setup /dev/null
+       
         FS.registerDevice(FS.makedev(1, 3), {
           read: () => 0,
           write: (stream, buffer, offset, length, pos) => length,
           llseek: () => 0,
         });
         FS.mkdev('/dev/null', FS.makedev(1, 3));
-        // setup /dev/tty and /dev/tty1
-        // stderr needs to print output using err() rather than out()
-        // so we register a second tty just for it.
+       
+       
+       
         TTY.register(FS.makedev(5, 0), TTY.default_tty_ops);
         TTY.register(FS.makedev(6, 0), TTY.default_tty1_ops);
         FS.mkdev('/dev/tty', FS.makedev(5, 0));
         FS.mkdev('/dev/tty1', FS.makedev(6, 0));
-        // setup /dev/[u]random
-        // use a buffer to avoid overhead of individual crypto calls per byte
+       
+       
         var randomBuffer = new Uint8Array(1024), randomLeft = 0;
         var randomByte = () => {
           if (randomLeft === 0) {
@@ -3198,14 +3198,14 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         };
         FS.createDevice('/dev', 'random', randomByte);
         FS.createDevice('/dev', 'urandom', randomByte);
-        // we're not going to emulate the actual shm device,
-        // just create the tmp dirs that reside in it commonly
+       
+       
         FS.mkdir('/dev/shm');
         FS.mkdir('/dev/shm/tmp');
       },
   createSpecialDirectories() {
-        // create /proc/self/fd which allows /proc/self/fd/6 => readlink gives the
-        // name of the stream for fd 6 (see test_unistd_ttyname)
+       
+       
         FS.mkdir('/proc');
         var proc_self = FS.mkdir('/proc/self');
         FS.mkdir('/proc/self/fd');
@@ -3225,7 +3225,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
                   node_ops: { readlink: () => stream.path },
                   id: fd + 1,
                 };
-                ret.parent = ret; // make it look like a simple root node
+                ret.parent = ret;
                 return ret;
               },
               readdir() {
@@ -3239,14 +3239,14 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         }, {}, '/proc/self/fd');
       },
   createStandardStreams(input, output, error) {
-        // TODO deprecate the old functionality of a single
-        // input / output callback and that utilizes FS.createDevice
-        // and instead require a unique set of stream ops
+       
+       
+       
   
-        // by default, we symlink the standard streams to the
-        // default tty devices. however, if the standard streams
-        // have been overwritten we create a unique device for
-        // them instead.
+       
+       
+       
+       
         if (input) {
           FS.createDevice('/dev', 'stdin', input);
         } else {
@@ -3263,7 +3263,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           FS.symlink('/dev/tty1', '/dev/stderr');
         }
   
-        // open default streams for the stdin, stdout and stderr devices
+       
         var stdin = FS.open('/dev/stdin', 0);
         var stdout = FS.open('/dev/stdout', 1);
         var stderr = FS.open('/dev/stderr', 1);
@@ -3288,7 +3288,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         assert(!FS.initialized, 'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)');
         FS.initialized = true;
   
-        // Allow Module.stdin etc. to provide defaults, if none explicitly passed to us here
+       
         input ??= Module['stdin'];
         output ??= Module['stdout'];
         error ??= Module['stderr'];
@@ -3297,9 +3297,9 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       },
   quit() {
         FS.initialized = false;
-        // force-flush all streams, so we get musl std streams printed out
+       
         _fflush(0);
-        // close all of our streams
+       
         for (var stream of FS.streams) {
           if (stream) {
             FS.close(stream);
@@ -3314,7 +3314,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         return ret.object;
       },
   analyzePath(path, dontResolveLastLink) {
-        // operate from within the context of the symlink's target
+       
         try {
           var lookup = FS.lookupPath(path, { follow: !dontResolveLastLink });
           path = lookup.path;
@@ -3372,7 +3372,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         var node = FS.create(path, mode);
         if (data) {
           data = FS_fileDataToTypedArray(data);
-          // make sure we can write to the file
+         
           FS.chmod(node, mode | 146);
           var stream = FS.open(node, 577);
           FS.write(stream, data, 0, data.length, 0, canOwn);
@@ -3385,19 +3385,19 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         var mode = FS_getMode(!!input, !!output);
         FS.createDevice.major ??= 64;
         var dev = FS.makedev(FS.createDevice.major++, 0);
-        // Create a fake device that a set of stream ops to emulate
-        // the old behavior.
+       
+       
         FS.registerDevice(dev, {
           open(stream) {
             stream.seekable = false;
           },
           close(stream) {
-            // flush any pending line data
+           
             if (output?.buffer?.length) {
               output(10);
             }
           },
-          read(stream, buffer, offset, length, pos /* ignored */) {
+          read(stream, buffer, offset, length, pos ) {
             var bytesRead = 0;
             for (var i = 0; i < length; i++) {
               var result;
@@ -3438,7 +3438,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (obj.isDevice || obj.isFolder || obj.link || obj.contents) return true;
         if (globalThis.XMLHttpRequest) {
           abort("Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.");
-        } else { // Command-line.
+        } else {
           try {
             obj.contents = readBinary(obj.url);
           } catch (e) {
@@ -3447,11 +3447,11 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         }
       },
   createLazyFile(parent, name, url, canRead, canWrite) {
-        // Lazy chunked Uint8Array (implements get and length from Uint8Array).
-        // Actual getting is abstracted away for eventual reuse.
+       
+       
         class LazyUint8Array {
           lengthKnown = false;
-          chunks = []; // Loaded chunks. Index is the chunk number
+          chunks = [];
           get(idx) {
             if (idx > this.length-1 || idx < 0) {
               return undefined;
@@ -3464,7 +3464,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             this.getter = getter;
           }
           cacheLength() {
-            // Find length
+           
             var xhr = new XMLHttpRequest();
             xhr.open('HEAD', url, false);
             xhr.send(null);
@@ -3474,21 +3474,21 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             var hasByteServing = (header = xhr.getResponseHeader("Accept-Ranges")) && header === "bytes";
             var usesGzip = (header = xhr.getResponseHeader("Content-Encoding")) && header === "gzip";
   
-            var chunkSize = 1024*1024; // Chunk size in bytes
+            var chunkSize = 1024*1024;
   
             if (!hasByteServing) chunkSize = datalength;
   
-            // Function to get a range from the remote URL.
+           
             var doXHR = (from, to) => {
               if (from > to) abort(`invalid range (${from}, ${to}) or no bytes requested!`);
               if (to > datalength-1) abort(`only ${datalength} bytes available! programmer error!`);
   
-              // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
+             
               var xhr = new XMLHttpRequest();
               xhr.open('GET', url, false);
               if (datalength !== chunkSize) xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
   
-              // Some hints to the browser that we want binary data.
+             
               xhr.responseType = 'arraybuffer';
               if (xhr.overrideMimeType) {
                 xhr.overrideMimeType('text/plain; charset=x-user-defined');
@@ -3497,15 +3497,15 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
               xhr.send(null);
               if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) abort("Couldn't load " + url + ". Status: " + xhr.status);
               if (xhr.response !== undefined) {
-                return new Uint8Array(/** @type{Array<number>} */(xhr.response || []));
+                return new Uint8Array((xhr.response || []));
               }
               return intArrayFromString(xhr.responseText ?? '', true);
             };
             var lazyArray = this;
             lazyArray.setDataGetter((chunkNum) => {
               var start = chunkNum * chunkSize;
-              var end = (chunkNum+1) * chunkSize - 1; // including this byte
-              end = Math.min(end, datalength-1); // if datalength-1 is selected, this is the last block
+              var end = (chunkNum+1) * chunkSize - 1;
+              end = Math.min(end, datalength-1);
               if (typeof lazyArray.chunks[chunkNum] == 'undefined') {
                 lazyArray.chunks[chunkNum] = doXHR(start, end);
               }
@@ -3514,8 +3514,8 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             });
   
             if (usesGzip || !datalength) {
-              // if the server uses gzip or doesn't supply the length, we have to download the whole file to get the (uncompressed) length
-              chunkSize = datalength = 1; // this will force getter(0)/doXHR do download the whole file
+             
+              chunkSize = datalength = 1;
               datalength = this.getter(0).length;
               chunkSize = datalength;
               out("LazyFiles on gzip forces download of the whole file when length is accessed");
@@ -3548,22 +3548,22 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         }
   
         var node = FS.createFile(parent, name, properties, canRead, canWrite);
-        // This is a total hack, but I want to get this lazy file code out of the
-        // core of MEMFS. If we want to keep this lazy file concept I feel it should
-        // be its own thin LAZYFS proxying calls to MEMFS.
+       
+       
+       
         if (properties.contents) {
           node.contents = properties.contents;
         } else if (properties.url) {
           node.contents = null;
           node.url = properties.url;
         }
-        // Add a function that defers querying the file size until it is asked the first time.
+       
         Object.defineProperties(node, {
           usedBytes: {
             get: function() { return this.contents.length; }
           }
         });
-        // override each stream op with one that tries to force load the lazy file first
+       
         var stream_ops = {};
         for (const [key, fn] of Object.entries(node.stream_ops)) {
           stream_ops[key] = (...args) => {
@@ -3577,23 +3577,23 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
             return 0;
           var size = Math.min(contents.length - position, length);
           assert(size >= 0);
-          if (contents.slice) { // normal array
+          if (contents.slice) {
             for (var i = 0; i < size; i++) {
               buffer[offset + i] = contents[position + i];
             }
           } else {
-            for (var i = 0; i < size; i++) { // LazyUint8Array from sync binary XHR
+            for (var i = 0; i < size; i++) {
               buffer[offset + i] = contents.get(position + i);
             }
           }
           return size;
         }
-        // use a custom read function
+       
         stream_ops.read = (stream, buffer, offset, length, position) => {
           FS.forceLoadFile(node);
           return writeChunks(stream, buffer, offset, length, position)
         };
-        // use a custom mmap function
+       
         stream_ops.mmap = (stream, length, position, prot, flags) => {
           FS.forceLoadFile(node);
           var ptr = mmapAlloc(length);
@@ -3614,7 +3614,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (PATH.isAbs(path)) {
           return path;
         }
-        // relative path
+       
         var dir;
         if (dirfd === -100) {
           dir = FS.cwd();
@@ -3661,7 +3661,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         HEAP64[(((buf)+(32))>>3)] = BigInt(stats.files);
         HEAP64[(((buf)+(40))>>3)] = BigInt(stats.ffree);
         HEAPU32[(((buf)+(48))>>2)] = stats.fsid;
-        HEAPU32[(((buf)+(64))>>2)] = stats.flags;  // ST_NOSUID
+        HEAPU32[(((buf)+(64))>>2)] = stats.flags; 
         HEAPU32[(((buf)+(56))>>2)] = stats.namelen;
       },
   doMsync(addr, stream, len, flags, offset) {
@@ -3669,7 +3669,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
           throw new FS.ErrnoError(43);
         }
         if (flags & 2) {
-          // MAP_PRIVATE calls need not to be synced back to underlying fs
+         
           return 0;
         }
         var buffer = HEAPU8.subarray(addr, addr + len);
@@ -3698,7 +3698,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   }
   
 
-  /** @param {number=} offset */
+  
   var doReadv = (stream, iov, iovcnt, offset) => {
       var ret = 0;
       for (var i = 0; i < iovcnt; i++) {
@@ -3708,7 +3708,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         var curr = FS.read(stream, HEAP8, ptr, len, offset);
         if (curr < 0) return -1;
         ret += curr;
-        if (curr < len) break; // nothing more to read
+        if (curr < len) break;
         if (typeof offset != 'undefined') {
           offset += curr;
         }
@@ -3745,7 +3745,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.llseek(stream, offset, whence);
       HEAP64[((newOffset)>>3)] = BigInt(stream.position);
-      if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null; // reset readdir state
+      if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null;
       return 0;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -3754,7 +3754,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   ;
   }
 
-  /** @param {number=} offset */
+  
   var doWritev = (stream, iov, iovcnt, offset) => {
       var ret = 0;
       for (var i = 0; i < iovcnt; i++) {
@@ -3765,7 +3765,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
         if (curr < 0) return -1;
         ret += curr;
         if (curr < len) {
-          // No more space to write.
+         
           break;
         }
         if (typeof offset != 'undefined') {
@@ -3802,13 +3802,13 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
     };
   
   
-  /** @param {boolean|number=} implicit */
+  
   var exitJS = (status, implicit) => {
       EXITSTATUS = status;
   
       checkUnflushedContent();
   
-      // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
+     
       if (keepRuntimeAlive() && !implicit) {
         var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
         err(msg);
@@ -3818,11 +3818,11 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
     };
 
   var handleException = (e) => {
-      // Certain exception types we do not treat as errors since they are used for
-      // internal control flow.
-      // 1. ExitStatus, which is thrown by exit()
-      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
-      //    that wish to return to JS event loop.
+     
+     
+     
+     
+     
       if (e instanceof ExitStatus || e == 'unwind') {
         return EXITSTATUS;
       }
@@ -3836,7 +3836,7 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
     };
 
   var getCFunc = (ident) => {
-      var func = Module['_' + ident]; // closure exported function
+      var func = Module['_' + ident];
       assert(func, `Cannot call unknown function ${ident}, make sure it is exported`);
       return func;
     };
@@ -3867,11 +3867,11 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
    * @param {Object=} opts
    */
   var ccall = (ident, returnType, argTypes, args, opts) => {
-      // For fast lookup of conversion functions
+     
       var toC = {
         'string': (str) => {
           var ret = 0;
-          if (str !== null && str !== undefined && str !== 0) { // null string
+          if (str !== null && str !== undefined && str !== 0) {
             ret = stringToUTF8OnStack(str);
           }
           return ret;
@@ -3930,27 +3930,27 @@ var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   FS.createPreloadedFile = FS_createPreloadedFile;
   FS.preloadFile = FS_preloadFile;
   FS.staticInit();;
-// End JS library code
 
-// include: postlibrary.js
-// This file is included after the automatically-generated JS library code
-// but before the wasm module is created.
+
+
+
+
 
 {
 
-  // Begin ATMODULES hooks
+ 
   if (Module['noExitRuntime']) noExitRuntime = Module['noExitRuntime'];
 
 if (Module['print']) out = Module['print'];
 if (Module['printErr']) err = Module['printErr'];
-  // End ATMODULES hooks
+ 
 
   checkIncomingModuleAPI();
 
   if (Module['arguments']) programArgs = Module['arguments'];
   if (Module['thisProgram']) thisProgram = Module['thisProgram'];
 
-  // Assertions on removed incoming Module JS APIs.
+ 
   assert(typeof Module['memoryInitializerPrefixURL'] == 'undefined', 'Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead');
   assert(typeof Module['pthreadMainPrefixURL'] == 'undefined', 'Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead');
   assert(typeof Module['cdInitializerPrefixURL'] == 'undefined', 'Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead');
@@ -3962,15 +3962,15 @@ if (Module['printErr']) err = Module['printErr'];
   assert(typeof Module['TOTAL_MEMORY'] == 'undefined', 'Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY');
   assert(typeof Module['ENVIRONMENT'] == 'undefined', 'Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)');
   assert(typeof Module['STACK_SIZE'] == 'undefined', 'STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time')
-  // If memory is defined in wasm, the user can't provide it, or set INITIAL_MEMORY
+ 
   assert(typeof Module['wasmMemory'] == 'undefined', 'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally');
   assert(typeof Module['INITIAL_MEMORY'] == 'undefined', 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
 
   var preInit = Module['preInit'];
   if (preInit) {
     if (typeof preInit == 'function') Module['preInit'] = preInit = [preInit];
-    // Written as a loop so that preInit functions that themselves add more
-    // preInit functions.  Is this actually needed?
+   
+   
     while (preInit.length > 0) {
       preInit.shift()();
     }
@@ -3978,7 +3978,7 @@ if (Module['printErr']) err = Module['printErr'];
   consumedModuleProp('preInit');
 }
 
-// Begin runtime exports
+
   Module['ccall'] = ccall;
   Module['cwrap'] = cwrap;
   var missingLibrarySymbols = [
@@ -4382,11 +4382,11 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
-  // End runtime exports
-  // Begin JS library exports
-  // End JS library exports
+ 
+ 
+ 
 
-// end include: postlibrary.js
+
 
 function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
@@ -4418,7 +4418,7 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('wasmBinary');
 }
 
-// Imports from the Wasm binary.
+
 var _init_game = Module['_init_game'] = makeInvalidEarlyAccess('_init_game');
 var _check_guess = Module['_check_guess'] = makeInvalidEarlyAccess('_check_guess');
 var _main = Module['_main'] = makeInvalidEarlyAccess('_main');
@@ -4473,33 +4473,33 @@ function assignWasmExports(wasmExports) {
 }
 
 var wasmImports = {
-  /** @export */
+  
   __cxa_throw: ___cxa_throw,
-  /** @export */
+  
   _abort_js: __abort_js,
-  /** @export */
+  
   _tzset_js: __tzset_js,
-  /** @export */
+  
   emscripten_date_now: _emscripten_date_now,
-  /** @export */
+  
   emscripten_resize_heap: _emscripten_resize_heap,
-  /** @export */
+  
   environ_get: _environ_get,
-  /** @export */
+  
   environ_sizes_get: _environ_sizes_get,
-  /** @export */
+  
   fd_close: _fd_close,
-  /** @export */
+  
   fd_read: _fd_read,
-  /** @export */
+  
   fd_seek: _fd_seek,
-  /** @export */
+  
   fd_write: _fd_write
 };
 
 
-// include: postamble.js
-// === Auto-generated postamble setup entry stuff ===
+
+
 
 var calledRun;
 
@@ -4516,8 +4516,8 @@ function callMain() {
 
     var ret = entryFunction(argc, argv);
 
-    // if we're not running an evented main loop, it's time to exit
-    exitJS(ret, /* implicit = */ true);
+   
+    exitJS(ret,  true);
     return ret;
   } catch (e) {
     return handleException(e);
@@ -4525,11 +4525,11 @@ function callMain() {
 }
 
 function stackCheckInit() {
-  // This is normally called automatically during __wasm_call_ctors but need to
-  // get these values before even running any of the ctors so we call it redundantly
-  // here.
+ 
+ 
+ 
   _emscripten_stack_init();
-  // TODO(sbc): Move writeStackCookie to native to to avoid this.
+ 
   writeStackCookie();
 }
 
@@ -4548,9 +4548,9 @@ async function run() {
   var setStatus = Module['setStatus'];
   if (setStatus) {
     setStatus('Running...');
-    // Yield to the event loop to allow the browser to paint "Running..."
+   
     await new Promise((resolve) => setTimeout(resolve, 1));
-    // Then we want to clear the status text, but only after the rest of this function runs.
+   
     setTimeout(setStatus, 1, '');
   }
 
@@ -4558,7 +4558,7 @@ async function run() {
 
   initRuntime();
 
-  // No ATMAINS hooks
+ 
 
   Module['onRuntimeInitialized']?.();
   consumedModuleProp('onRuntimeInitialized');
@@ -4570,26 +4570,26 @@ async function run() {
 }
 
 function checkUnflushedContent() {
-  // Compiler settings do not allow exiting the runtime, so flushing
-  // the streams is not possible. but in ASSERTIONS mode we check
-  // if there was something to flush, and if so tell the user they
-  // should request that the runtime be exitable.
-  // Normally we would not even include flush() at all, but in ASSERTIONS
-  // builds we do so just for this check, and here we see if there is any
-  // content to flush, that is, we check if there would have been
-  // something a non-ASSERTIONS build would have not seen.
-  // How we flush the streams depends on whether we are in SYSCALLS_REQUIRE_FILESYSTEM=0
-  // mode (which has its own special function for this; otherwise, all
-  // the code is inside libc)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
   var oldOut = out;
   var oldErr = err;
   var has = false;
   out = err = (x) => {
     has = true;
   }
-  try { // it doesn't matter if it fails
+  try {
     _fflush(0);
-    // also flush in the JS FS layer
+   
     for (var name of ['stdout', 'stderr']) {
       var info = FS.analyzePath('/dev/' + name);
       if (!info) return;
@@ -4610,9 +4610,9 @@ function checkUnflushedContent() {
 
 var wasmExports;
 
-// With async instantation wasmExports is assigned asynchronously when the
-// instance is received.
+
+
 createWasm().then(() => run());
 
-// end include: postamble.js
+
 
