@@ -14,8 +14,7 @@
 
   var TARGET_NOT_SUPPORTED = 2147483647;
 
-  // Note: We use a typeof check here instead of optional chaining using
-  // globalThis because older browsers might not have globalThis defined.
+
   var currentNodeVersion = typeof process !== 'undefined' && process.versions?.node ? humanReadableVersionToPacked(process.versions.node) : TARGET_NOT_SUPPORTED;
   if (currentNodeVersion < 180300) {
     throw new Error(`This emscripten-generated code requires node v${ packedVersionToHumanReadable(180300) } (detected v${packedVersionToHumanReadable(currentNodeVersion)})`);
@@ -42,26 +41,7 @@
   }
 })();
 
-// end include: minimum_runtime_check.js
-// The Module object: Our interface to the outside world. We import
-// and export values on it. There are various ways Module can be used:
-// 1. Not defined. We create it here
-// 2. A function parameter, function(moduleArg) => Promise<Module>
-// 3. pre-run appended it, var Module = {}; ..generated code..
-// 4. External script tag defines var Module.
-// We need to check if Module already exists (e.g. case 3 above).
-// Substitution will be replaced with actual code on later stage of the build,
-// this way Closure Compiler will not mangle it (e.g. case 4. above).
-// Note that if you want to run closure, and also to use Module
-// after the generated code, you will need to define   var Module = {};
-// before the code. Then that object will be used in the code, and you
-// can continue to use Module afterwards as well.
 var Module = typeof Module != 'undefined' ? Module : {};
-
-// Determine the runtime environment we are in. You can customize this by
-// setting the ENVIRONMENT setting at compile time (see settings.js).
-
-// Attempt to auto-detect the environment
 var ENVIRONMENT_IS_WEB = !!globalThis.window;
 var ENVIRONMENT_IS_WORKER = !!globalThis.WorkerGlobalScope;
 // N.b. Electron.js environment is simultaneously a NODE-environment, but
@@ -69,8 +49,6 @@ var ENVIRONMENT_IS_WORKER = !!globalThis.WorkerGlobalScope;
 var ENVIRONMENT_IS_NODE = globalThis.process?.versions?.node && globalThis.process?.type != 'renderer';
 var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
 
-// --pre-jses are emitted after the Module integration code, so that they can
-// refer to Module (if they choose; they can also define Module)
 
 
 var programArgs = [];
@@ -78,9 +56,6 @@ var thisProgram = './this.program';
 var quit_ = (status, toThrow) => {
   throw toThrow;
 };
-
-// In MODULARIZE mode _scriptName needs to be captured already at the very top of the page immediately when the page is parsed, so it is generated there
-// before the page load. In non-MODULARIZE modes generate it here.
 var _scriptName = globalThis.document?.currentScript?.src;
 
 if (typeof __filename != 'undefined') { // Node
@@ -99,20 +74,16 @@ function locateFile(path) {
   return scriptDirectory + path;
 }
 
-// Hooks that are implemented differently in different runtime environments.
 var readAsync, readBinary;
 
 if (ENVIRONMENT_IS_NODE) {
   const isNode = globalThis.process?.versions?.node && globalThis.process?.type != 'renderer';
   if (!isNode) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
 
-  // These modules will usually be used on Node.js. Load them eagerly to avoid
-  // the complexity of lazy-loading.
   var fs = require('node:fs');
 
   scriptDirectory = __dirname + '/';
 
-// include: node_shell_read.js
 readBinary = (filename) => {
   // We need to re-wrap `file://` strings to URLs.
   filename = isFileURI(filename) ? new URL(filename) : filename;
@@ -122,20 +93,17 @@ readBinary = (filename) => {
 };
 
 readAsync = async (filename, binary = true) => {
-  // See the comment in the `readBinary` function.
   filename = isFileURI(filename) ? new URL(filename) : filename;
   var ret = fs.readFileSync(filename, binary ? undefined : 'utf8');
   assert(binary ? Buffer.isBuffer(ret) : typeof ret == 'string');
   return ret;
 };
-// end include: node_shell_read.js
   if (process.argv.length > 1) {
     thisProgram = process.argv[1].replace(/\\/g, '/');
   }
 
   programArgs = process.argv.slice(2);
 
-  // MODULARIZE will export the module in the proper place outside, we don't need to export here
   if (typeof module != 'undefined') {
     module['exports'] = Module;
   }
@@ -150,9 +118,7 @@ if (ENVIRONMENT_IS_SHELL) {
 
 } else
 
-// Note that this includes Node.js workers when relevant (pthreads is enabled).
-// Node.js workers are detected as a combination of ENVIRONMENT_IS_WORKER and
-// ENVIRONMENT_IS_NODE.
+
 if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
   try {
     scriptDirectory = new URL('.', _scriptName).href; // includes trailing slash
@@ -164,7 +130,6 @@ if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
   if (!(globalThis.window || globalThis.WorkerGlobalScope)) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
 
   {
-// include: web_or_worker_shell_read.js
 if (ENVIRONMENT_IS_WORKER) {
     readBinary = (url) => {
       var xhr = new XMLHttpRequest();
@@ -222,80 +187,32 @@ var OPFS = 'OPFS is no longer included by default; build with -lopfs.js';
 
 var NODEFS = 'NODEFS is no longer included by default; build with -lnodefs.js';
 
-// perform assertions in shell.js after we set up out() and err(), as otherwise
-// if an assertion fails it cannot print the message
 
 assert(!ENVIRONMENT_IS_SHELL, 'shell environment detected but not enabled at build time (add `shell` to `-sENVIRONMENT` to enable)');
-
-// end include: shell.js
-
-// include: preamble.js
-// === Preamble library stuff ===
-
-// Documentation for the public APIs defined in this file must be updated in:
-//    site/source/docs/api_reference/preamble.js.rst
-// A prebuilt local version of the documentation is available at:
-//    site/build/text/docs/api_reference/preamble.js.txt
-// You can also build docs locally as HTML or other formats in site/
-// An online HTML version (which may be of a different version of Emscripten)
-//    is up at http://kripken.github.io/emscripten-site/docs/api_reference/preamble.js.html
-
 var wasmBinary;
 
 if (!globalThis.WebAssembly) {
   err('no native wasm support detected');
 }
 
-// Wasm globals
-
-//========================================
-// Runtime essentials
-//========================================
-
-// whether we are quitting the application. no code should run after this.
-// set in exit() and abort()
 var ABORT = false;
 
-// set by exit() and abort().  Passed to 'onExit' handler.
-// NOTE: This is also used as the process return code in shell environments
-// but only when noExitRuntime is false.
 var EXITSTATUS;
 
-// In STRICT mode, we only define assert() when ASSERTIONS is set.  i.e. we
-// don't define it at all in release modes.  This matches the behaviour of
-// MINIMAL_RUNTIME.
-// TODO(sbc): Make this the default even without STRICT enabled.
-/** @type {function(*, string=)} */
+
 function assert(condition, text) {
   if (!condition) {
     abort('Assertion failed' + (text ? ': ' + text : ''));
   }
 }
-
-// We used to include malloc/free by default in the past. Show a helpful error in
-// builds with assertions.
-
-/**
- * Indicates whether filename is delivered via file protocol (as opposed to http/https)
- * @noinline
- */
 var isFileURI = (filename) => filename.startsWith('file://');
-
-// include: runtime_common.js
-// include: runtime_stack_check.js
-// Initializes the stack cookie. Called at the startup of main and at the startup of each thread in pthreads mode.
 function writeStackCookie() {
   var max = _emscripten_stack_get_end();
   assert((max & 3) == 0);
-  // If the stack ends at address zero we write our cookies 4 bytes into the
-  // stack.  This prevents interference with SAFE_HEAP and ASAN which also
-  // monitor writes to address zero.
   if (max == 0) {
     max += 4;
   }
-  // The stack grow downwards towards _emscripten_stack_get_end.
-  // We write cookies to the final two words in the stack and detect if they are
-  // ever overwritten.
+
   HEAPU32[((max)>>2)] = 0x02135467;
   HEAPU32[(((max)+(4))>>2)] = 0x89BACDFE;
   // Also test the global address 0 for integrity.
@@ -314,23 +231,16 @@ function checkStackCookie() {
   if (cookie1 != 0x02135467 || cookie2 != 0x89BACDFE) {
     abort(`Stack overflow! Stack cookie has been overwritten at ${ptrToString(max)}, expected hex dwords 0x89BACDFE and 0x2135467, but received ${ptrToString(cookie2)} ${ptrToString(cookie1)}`);
   }
-  // Also test the global address 0 for integrity.
   if (HEAPU32[((0)>>2)] != 0x63736d65 /* 'emsc' */) {
     abort('Runtime error: The application has corrupted its heap memory area (address zero)!');
   }
 }
-// end include: runtime_stack_check.js
-// include: runtime_exceptions.js
-// Base Emscripten EH error class
 class EmscriptenEH {}
 
 class EmscriptenSjLj extends EmscriptenEH {}
 
-// end include: runtime_exceptions.js
-// include: runtime_debug.js
-var runtimeDebug = true; // Switch to false at runtime to disable logging at the right times
 
-// Used by XXXXX_DEBUG settings to output debug messages.
+var runtimeDebug = true; // Switch to false at runtime to disable logging at the right times
 function dbg(...args) {
   if (!runtimeDebug && typeof runtimeDebug != 'undefined') return;
   // TODO(sbc): Make this configurable somehow.  Its not always convenient for
@@ -338,7 +248,6 @@ function dbg(...args) {
   console.warn(...args);
 }
 
-// Endianness check
 (() => {
   var h16 = new Int16Array(1);
   var h8 = new Int8Array(h16.buffer);
@@ -385,7 +294,7 @@ function ignoredModuleProp(prop) {
   }
 }
 
-// forcing the filesystem exports a few things by default
+
 function isExportedByForceFilesystem(name) {
   return name === 'FS_createPath' ||
          name === 'FS_createDataFile' ||
@@ -393,20 +302,12 @@ function isExportedByForceFilesystem(name) {
          name === 'FS_preloadFile' ||
          name === 'FS_unlink' ||
          name === 'addRunDependency' ||
-         // The old FS has some functionality that WasmFS lacks.
+
          name === 'FS_createLazyFile' ||
          name === 'FS_createDevice' ||
          name === 'removeRunDependency';
 }
 
-/**
- * Intercept access to a symbols in the global symbol.  This enables us to give
- * informative warnings/errors when folks attempt to use symbols they did not
- * include in their build, or no symbols that no longer exist.
- *
- * We don't define this in MODULARIZE mode since in that mode emscripten symbols
- * are never placed in the global scope.
- */
 function hookGlobalSymbolAccess(sym, func) {
   if (!Object.getOwnPropertyDescriptor(globalThis, sym)) {
     Object.defineProperty(globalThis, sym, {
@@ -430,12 +331,9 @@ missingGlobal('asm', 'Please use wasmExports instead');
 
 function missingLibrarySymbol(sym) {
   hookGlobalSymbolAccess(sym, () => {
-    // Can't `abort()` here because it would break code that does runtime
-    // checks.  e.g. `if (typeof SDL === 'undefined')`.
+
     var msg = `\`${sym}\` is a library symbol and not included by default; add it to your library.js __deps or to DEFAULT_LIBRARY_FUNCS_TO_INCLUDE on the command line`;
-    // DEFAULT_LIBRARY_FUNCS_TO_INCLUDE requires the name as it appears in
-    // library.js, which means $name for a JS name with no prefix, or name
-    // for a JS name like _name.
+
     var librarySymbol = sym;
     if (!librarySymbol.startsWith('_')) {
       librarySymbol = '$' + sym;
@@ -467,15 +365,13 @@ function unexportedRuntimeSymbol(sym) {
   }
 }
 
-// end include: runtime_debug.js
-// Memory management
+
 
 var runtimeInitialized = false;
 
 
 
 function updateMemoryViews() {
-  // When memory growth is disabled this function should be called exactly once.
   assert(!HEAP8, 'updateMemoryViews should only be called once when ALLOW_MEMORY_GROWTH=0');
   var b = wasmMemory.buffer;
   HEAP8 = new Int8Array(b);
@@ -490,9 +386,9 @@ function updateMemoryViews() {
   HEAPU64 = new BigUint64Array(b);
 }
 
-// include: memoryprofiler.js
-// end include: memoryprofiler.js
-// end include: runtime_common.js
+/* include: memoryprofiler.js
+end include: memoryprofiler.js
+end include: runtime_common.js */
 assert(globalThis.Int32Array && globalThis.Float64Array && Int32Array.prototype.subarray && Int32Array.prototype.set,
        'JS engine does not provide full typed array support');
 
@@ -503,9 +399,7 @@ function preRun() {
     onPreRuns.push(...preRun);
   }
   consumedModuleProp('preRun');
-  // Begin ATPRERUNS hooks
   callRuntimeCallbacks(onPreRuns);
-  // End ATPRERUNS hooks
 }
 
 function initRuntime() {
@@ -514,16 +408,15 @@ function initRuntime() {
 
   checkStackCookie();
 
-  // Begin ATINITS hooks
+  // begin ATINITS hooks below/here
   if (!Module['noFSInit'] && !FS.initialized) FS.init();
 TTY.init();
-  // End ATINITS hooks
 
   wasmExports['__wasm_call_ctors']();
 
-  // Begin ATPOSTCTORS hooks
+
   FS.ignorePermissions = false;
-  // End ATPOSTCTORS hooks
+
 
   checkStackCookie();
 }
@@ -538,9 +431,8 @@ function postRun() {
   }
   consumedModuleProp('postRun');
 
-  // Begin ATPOSTRUNS hooks
   callRuntimeCallbacks(onPostRuns);
-  // End ATPOSTRUNS hooks
+  // should i comment everything
 }
 
 /**
@@ -550,31 +442,26 @@ function abort(what) {
   Module['onAbort']?.(what);
 
   what = `Aborted(${what})`;
-  // TODO(sbc): Should we remove printing and leave it up to whoever
-  // catches the exception?
+
   err(what);
 
   ABORT = true;
 
-  // Use a wasm runtime error, because a JS error might be seen as a foreign
-  // exception, which means we'd run destructors on it. We need the error to
-  // simply make the program stop.
-  // FIXME This approach does not work in Wasm EH because it currently does not assume
-  // all RuntimeErrors are from traps; it decides whether a RuntimeError is from
-  // a trap or not based on a hidden field within the object. So at the moment
-  // we don't have a way of throwing a wasm trap from JS. TODO Make a JS API that
-  // allows this in the wasm spec.
-
-  // Suppress closure compiler warning here. Closure compiler's builtin extern
-  // definition for WebAssembly.RuntimeError claims it takes no arguments even
-  // though it can.
-  // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure gets fixed.
-  /** @suppress {checkTypes} */
+  
   var e = new WebAssembly.RuntimeError(what);
 
-  // Throw the error whether or not MODULARIZE is set because abort is used
-  // in code paths apart from instantiation where an exception is expected
-  // to be thrown when abort is called.
+
+
+
+
+
+
+
+
+
+
+
+  
   throw e;
 }
 
@@ -582,40 +469,29 @@ function createExportWrapper(name, func, nargs) {
   assert(func);
   return (...args) => {
     assert(runtimeInitialized, `native function \`${name}\` called before runtime initialization`);
-    // Only assert for too many arguments. Too few can be valid since the missing arguments will be zero filled.
     assert(args.length <= nargs, `native function \`${name}\` called with ${args.length} args but expects ${nargs}`);
     return func(...args);
   };
 }
-
 var wasmBinaryFile;
-
 function findWasmBinary() {
   return locateFile('index.wasm');
 }
-
 function getBinarySync(file) {
   if (readBinary) {
     return readBinary(file);
   }
-  // Throwing a plain string here, even though it not normally advisable since
-  // this gets turning into an `abort` in instantiateArrayBuffer.
   throw 'both async and sync fetching of the wasm failed';
 }
-
 async function getWasmBinary(binaryFile) {
-  // If we don't have the binary yet, load it asynchronously using readAsync.
   if (!wasmBinary) {
-    // Fetch the binary using readAsync
     try {
       var response = await readAsync(binaryFile);
       return new Uint8Array(response);
     } catch {
-      // Fall back to getBinarySync below;
     }
   }
 
-  // Otherwise, getBinarySync should be able to get it synchronously
   return getBinarySync(binaryFile);
 }
 
@@ -637,14 +513,8 @@ async function instantiateArrayBuffer(binaryFile, imports) {
 
 async function instantiateAsync(binary, binaryFile, imports) {
   if (!binary
-      // Don't use streaming for file:// delivered objects in a webview, fetch them synchronously.
       && !isFileURI(binaryFile)
-      // Avoid instantiateStreaming() on Node.js environment for now, as while
-      // Node.js v18.1.0 implements it, it does not have a full fetch()
-      // implementation yet.
-      //
-      // Reference:
-      //   https://github.com/emscripten-core/emscripten/pull/16917
+
       && !ENVIRONMENT_IS_NODE
      ) {
     try {
@@ -652,11 +522,9 @@ async function instantiateAsync(binary, binaryFile, imports) {
       var instantiationResult = await WebAssembly.instantiateStreaming(response, imports);
       return instantiationResult;
     } catch (reason) {
-      // We expect the most common failure cause to be a bad MIME type for the binary,
-      // in which case falling back to ArrayBuffer instantiation should work.
+
       err(`wasm streaming compile failed: ${reason}`);
       err('falling back to ArrayBuffer instantiation');
-      // fall back of instantiateArrayBuffer below
     };
   }
   return instantiateArrayBuffer(binaryFile, imports);
@@ -671,8 +539,7 @@ function getWasmImports() {
   return imports;
 }
 
-// Create the wasm instance.
-// Receives the wasm imports, returns the exports.
+
 async function createWasm() {
   // Load the wasm module and create an instance of using native support in the JS engine.
   // handle a generated wasm instance, receiving its exports and
